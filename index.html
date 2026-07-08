@@ -78,8 +78,10 @@
         }
 
         /* Formularios */
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem;}
+        .form-row { display: flex; gap: 1rem; }
+        .form-row .form-group { flex: 1; }
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.9rem;}
         select, input {
             width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;
             transition: border-color 0.3s;
@@ -90,6 +92,12 @@
             width: 100%; padding: 1rem; background-color: var(--accent); color: white; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s;
         }
         button:hover { background-color: #2980B9; }
+
+        /* Cotizador */
+        .cotizacion-box {
+            display: none; padding: 1rem; background: #e8f4f8; border-left: 4px solid var(--accent); margin-bottom: 1.5rem; border-radius: 4px;
+            animation: fadeIn 0.3s ease;
+        }
 
         /* Modal de Alertas */
         .alert {
@@ -129,39 +137,13 @@
         .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--success); }
         input:checked + .slider:before { transform: translateX(26px); }
-
-        /* MODAL ENCUESTA NPS */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; 
-            justify-content: center; align-items: center; z-index: 1000;
-            backdrop-filter: blur(3px);
-        }
-        .modal-content {
-            background: white; padding: 2.5rem; border-radius: 12px; width: 90%; max-width: 500px;
-            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
-        .nps-numbers {
-            display: flex; justify-content: space-between; gap: 5px; margin: 2rem 0; flex-wrap: wrap;
+        /* Panel Webhook Simulator */
+        .webhook-panel {
+            background: #fff3cd; padding: 1rem; border: 1px dashed #ffeeba; border-radius: 4px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;
         }
-        .nps-btn {
-            width: 38px; height: 38px; border-radius: 50%; border: 1px solid #ddd;
-            background: #f9f9f9; cursor: pointer; font-weight: bold; color: #666;
-            transition: all 0.2s; font-size: 0.95rem; display: flex; align-items: center; justify-content: center;
-        }
-        .nps-btn:hover, .nps-btn.selected {
-            background: var(--success); color: white; border-color: var(--success); transform: scale(1.1);
-        }
-        .nps-labels {
-            display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: -10px; margin-bottom: 1.5rem;
-        }
-        .close-modal {
-            background: transparent; color: #999; padding: 0.5rem; font-weight: normal; margin-top: 1rem; width: auto;
-        }
-        .close-modal:hover { background: #f0f0f0; color: #333; }
+        .webhook-panel input { width: 100px; padding: 0.5rem; margin-right: 1rem; }
+        .webhook-panel button { width: auto; padding: 0.6rem 1rem; font-size: 0.9rem; background-color: #f39c12;}
 
     </style>
 </head>
@@ -180,36 +162,67 @@
 
     <div class="container">
         
-        <!-- VISTA 1: CLIENTE -->
         <div id="cliente" class="view active">
             <div class="card">
                 <h2 style="margin-top:0;">Agendar Mantención Preventiva</h2>
-                <p style="color:#666; margin-bottom:2rem;">Seleccione su vehículo y la fecha. El sistema verificará disponibilidad técnica al instante.</p>
+                <p style="color:#666; margin-bottom:1.5rem;">Seleccione los datos de su vehículo. Cotizaremos y verificaremos disponibilidad técnica al instante.</p>
                 
                 <div id="alertaCliente" class="alert"></div>
 
                 <form id="formAgendamiento">
-                    <div class="form-group">
-                        <label>Nombre del Cliente</label>
-                        <input type="text" id="nombreCliente" placeholder="Ej. Juan Pérez" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre del Cliente</label>
+                            <input type="text" id="nombreCliente" placeholder="Ej. Juan Pérez" required>
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp de Contacto</label>
+                            <input type="tel" id="whatsappCliente" value="+56926197544" readonly style="background-color: #f0f0f0; color: #555;" title="Fijado para la demo">
+                        </div>
                     </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Marca del Vehículo</label>
+                            <select id="marcaVehiculo" required>
+                                <option value="">Seleccione marca...</option>
+                                <option value="Toyota">Toyota</option>
+                                <option value="Chevrolet">Chevrolet</option>
+                                <option value="Ford">Ford</option>
+                                <option value="Nissan">Nissan</option>
+                                <option value="BMW">BMW (Premium)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Modelo y Año</label>
+                            <input type="text" id="modeloVehiculo" placeholder="Ej. Hilux 2023" required>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>Servicio Requerido</label>
                         <select id="tipoServicio" required>
+                            <option value="">Seleccione un servicio...</option>
                             <option value="Mantención 10.000 KM">Mantención 10.000 KM (Aceite y Filtros)</option>
                             <option value="Cambio de Pastillas de Freno">Cambio de Pastillas de Freno</option>
                         </select>
                     </div>
+
                     <div class="form-group">
                         <label>Fecha Solicitada</label>
                         <input type="date" id="fechaCita" required>
                     </div>
-                    <button type="submit" id="btnAgendar">Validar Disponibilidad y Agendar</button>
+
+                    <div class="cotizacion-box" id="cajaCotizacion">
+                        <span style="color:#666; font-size:0.9rem;">Cotización Estimada (IVA Inc.):</span><br>
+                        <span id="precioEstimado" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">$0</span>
+                    </div>
+
+                    <button type="submit" id="btnAgendar">Confirmar Cotización y Agendar</button>
                 </form>
             </div>
         </div>
 
-        <!-- VISTA 2: LOGÍSTICA -->
         <div id="logistica" class="view">
             <div class="card">
                 <h2 style="margin-top:0;">Simulador de Inventario (Logística)</h2>
@@ -228,13 +241,22 @@
             </div>
         </div>
 
-        <!-- VISTA 3: TALLER -->
         <div id="dashboard" class="view">
             <div class="card">
                 <h2 style="margin-top:0;">Panel Asesor de Servicio y Medición</h2>
                 <p style="color:#666; margin-bottom:1.5rem;">Visualización de carga diaria e indicadores de satisfacción en tiempo real.</p>
                 
-                <!-- Estadísticas NPS en Vivo -->
+                <div class="webhook-panel">
+                    <div>
+                        <strong style="color: #856404;">🔌 Simulador de API WhatsApp</strong><br>
+                        <span style="font-size: 0.85rem; color: #856404;">Ingresa aquí el puntaje que el cliente contestó por WhatsApp para actualizar el Dashboard.</span>
+                    </div>
+                    <div style="display:flex;">
+                        <input type="number" id="inputWebhookNPS" min="1" max="10" placeholder="Pje (1-10)">
+                        <button type="button" onclick="simularWebhookNPS()">Recibir</button>
+                    </div>
+                </div>
+
                 <div class="stats-container">
                     <div class="stat-box">
                         <h3>NPS Promedio</h3>
@@ -250,16 +272,16 @@
                     <thead>
                         <tr>
                             <th>Cliente</th>
+                            <th>Vehículo</th>
                             <th>Servicio</th>
-                            <th>Fecha</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
                     <tbody id="tablaTaller">
                         <tr>
                             <td>María González</td>
+                            <td>Ford Ranger</td>
                             <td>Revisión General</td>
-                            <td>2026-07-08</td>
                             <td><span class="badge amarillo">En Taller</span></td>
                         </tr>
                     </tbody>
@@ -268,88 +290,86 @@
         </div>
     </div>
 
-    <!-- MODAL ENCUESTA NPS (Oculto por defecto) -->
-    <div id="modalNPS" class="modal-overlay">
-        <div class="modal-content">
-            <h2 style="color: var(--primary); margin-top: 0;">¡Hola <span id="npsNombreCliente"></span>! 👋</h2>
-            <p style="color: #666; font-size: 0.95rem;">Tu vehículo ya fue retirado de la sucursal Valdivia. Para la Gerencia de Postventa de Trayén, tu opinión es fundamental.</p>
-            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">¿Qué tan probable es que recomiendes TallerYa a un amigo o colega?</h3>
-            
-            <div class="nps-numbers">
-                <!-- Escala 1 a 10 -->
-                <button type="button" class="nps-btn" data-val="1">1</button>
-                <button type="button" class="nps-btn" data-val="2">2</button>
-                <button type="button" class="nps-btn" data-val="3">3</button>
-                <button type="button" class="nps-btn" data-val="4">4</button>
-                <button type="button" class="nps-btn" data-val="5">5</button>
-                <button type="button" class="nps-btn" data-val="6">6</button>
-                <button type="button" class="nps-btn" data-val="7">7</button>
-                <button type="button" class="nps-btn" data-val="8">8</button>
-                <button type="button" class="nps-btn" data-val="9">9</button>
-                <button type="button" class="nps-btn" data-val="10">10</button>
-            </div>
-            <div class="nps-labels">
-                <span>Nada probable</span>
-                <span>Muy probable</span>
-            </div>
-
-            <button type="button" onclick="enviarEncuesta()" style="margin-bottom: 0.5rem;">Enviar Respuesta</button>
-            <button type="button" class="close-modal" onclick="cerrarEncuesta()">Cerrar x</button>
-        </div>
-    </div>
-
     <script>
         let stockDisponible = false; 
         
-        // Variables para calcular el NPS
+        // Precios Base para el Cotizador
+        const preciosBase = {
+            "Mantención 10.000 KM": 150000,
+            "Cambio de Pastillas de Freno": 85000
+        };
+        // Multiplicador simulado por marca
+        const factorMarca = {
+            "Toyota": 1.0, "Chevrolet": 1.0, "Nissan": 1.0, "Ford": 1.1, "BMW": 1.6
+        };
+        
+        // Variables para NPS
         let npsTotalSum = 0;
         let npsRespuestasTotales = 0;
-        let valorNpsSeleccionado = null;
 
         // Lógica de pestañas
         function switchTab(tabId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
         }
 
-        // Lógica de simulador de logística
-        const toggleStock = document.getElementById('toggleStock');
-        const stockStatusText = document.getElementById('stockStatusText');
+        // Lógica del Cotizador
+        function actualizarCotizacion() {
+            const servicio = document.getElementById('tipoServicio').value;
+            const marca = document.getElementById('marcaVehiculo').value;
+            const cajaCotizacion = document.getElementById('cajaCotizacion');
+            const precioEstimado = document.getElementById('precioEstimado');
 
-        toggleStock.addEventListener('change', (e) => {
-            stockDisponible = e.target.checked;
-            if(stockDisponible) {
-                stockStatusText.innerText = "Estado: Stock Disponible en Valdivia";
-                stockStatusText.style.color = "var(--success)";
+            if (servicio !== "" && marca !== "") {
+                const precio = preciosBase[servicio] * factorMarca[marca];
+                // Formato moneda CLP
+                precioEstimado.innerText = "$" + precio.toLocaleString('es-CL');
+                cajaCotizacion.style.display = 'block';
             } else {
-                stockStatusText.innerText = "Estado: Sin Stock (Quiebre)";
-                stockStatusText.style.color = "var(--danger)";
+                cajaCotizacion.style.display = 'none';
+            }
+        }
+        document.getElementById('tipoServicio').addEventListener('change', actualizarCotizacion);
+        document.getElementById('marcaVehiculo').addEventListener('change', actualizarCotizacion);
+
+        // Lógica de simulador de logística
+        document.getElementById('toggleStock').addEventListener('change', (e) => {
+            stockDisponible = e.target.checked;
+            const text = document.getElementById('stockStatusText');
+            if(stockDisponible) {
+                text.innerText = "Estado: Stock Disponible en Valdivia";
+                text.style.color = "var(--success)";
+            } else {
+                text.innerText = "Estado: Sin Stock (Quiebre)";
+                text.style.color = "var(--danger)";
             }
         });
 
-        // Lógica de Agendamiento
+        // Lógica de Agendamiento y Envío a WhatsApp
         document.getElementById('formAgendamiento').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const nombre = document.getElementById('nombreCliente').value;
+            const numeroTel = document.getElementById('whatsappCliente').value;
+            const marca = document.getElementById('marcaVehiculo').value;
+            const modelo = document.getElementById('modeloVehiculo').value;
             const servicio = document.getElementById('tipoServicio').value;
-            const fecha = document.getElementById('fechaCita').value;
             const alerta = document.getElementById('alertaCliente');
             const btnAgendar = document.getElementById('btnAgendar');
 
+            // Validación de Quiebre de Stock (Core del MVP)
             if (!stockDisponible && servicio.includes("10.000 KM")) {
                 alerta.className = 'alert error';
-                alerta.innerHTML = `<strong>Agendamiento Bloqueado:</strong> Lo sentimos, actualmente hay un quiebre de stock logístico para los insumos de esta mantención. No podemos recibir su vehículo para evitar que quede detenido en taller.`;
+                alerta.innerHTML = `<strong>Agendamiento Bloqueado:</strong> Lo sentimos, actualmente hay un quiebre de stock logístico para los insumos de esta mantención.`;
                 alerta.style.display = 'block';
                 return;
             }
 
             // Éxito: Hay stock
             alerta.className = 'alert success';
-            alerta.innerHTML = `<strong>Hora Confirmada:</strong> ¡Stock validado! Su hora está agendada.`;
+            alerta.innerHTML = `<strong>¡Hora Confirmada!</strong> Vehículo agendado correctamente.`;
             alerta.style.display = 'block';
 
             // Actualizar Dashboard
@@ -357,64 +377,61 @@
             tabla.innerHTML += `
                 <tr>
                     <td>${nombre}</td>
+                    <td>${marca} ${modelo}</td>
                     <td>${servicio}</td>
-                    <td>${fecha}</td>
-                    <td><span class="badge verde">Agendado (Stock Ok)</span></td>
+                    <td><span class="badge verde">Agendado Ok</span></td>
                 </tr>
             `;
             
-            // Inhabilitar botón para evitar múltiples clics mientras pasan los 10 segundos
             btnAgendar.disabled = true;
             btnAgendar.style.opacity = '0.5';
 
-            // Simular paso del tiempo y lanzar la encuesta NPS
+            // Simular paso del tiempo y enviar WhatsApp post-servicio (10 segundos)
             setTimeout(() => {
-                abrirEncuesta(nombre);
-                alerta.style.display = 'none'; // Limpiamos la alerta al abrir el modal
+                alerta.style.display = 'none'; 
                 btnAgendar.disabled = false;
                 btnAgendar.style.opacity = '1';
+                
+                // Limpiar form
                 document.getElementById('formAgendamiento').reset();
+                document.getElementById('cajaCotizacion').style.display = 'none';
+
+                // Armar mensaje para WhatsApp
+                // Formateando el número para la API (quitar el +)
+                const numeroLimpio = numeroTel.replace('+', ''); 
+                
+                const textoMensaje = `¡Hola ${nombre}! 👋 Tu ${marca} ${modelo} ya está listo y entregado en nuestra sucursal Trayén Valdivia.\n\nPara la Gerencia de Postventa tu opinión es fundamental. ¿Qué tan probable es que recomiendes TallerYa a un amigo o colega?\n\nResponde a este mensaje con un número del *1 al 10* (1 = Nada probable, 10 = Muy probable).`;
+                
+                const urlWhatsapp = `https://api.whatsapp.com/send?phone=${numeroLimpio}&text=${encodeURIComponent(textoMensaje)}`;
+                
+                // Abre WhatsApp en una nueva pestaña
+                window.open(urlWhatsapp, '_blank');
+
             }, 10000); 
         });
 
-        // Lógica Modal NPS y Captura de Valor
-        document.querySelectorAll('.nps-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.nps-btn').forEach(b => b.classList.remove('selected'));
-                this.classList.add('selected');
-                valorNpsSeleccionado = parseInt(this.getAttribute('data-val'));
-            });
-        });
+        // Lógica del Webhook Simulator (Para que el presentador ingrese el dato que llegó al teléfono)
+        function simularWebhookNPS() {
+            const inputVal = document.getElementById('inputWebhookNPS').value;
+            const puntaje = parseInt(inputVal);
 
-        function abrirEncuesta(nombreCliente) {
-            document.getElementById('modalNPS').style.display = 'flex';
-            document.getElementById('npsNombreCliente').innerText = nombreCliente;
-            // Resetear selección previa
-            valorNpsSeleccionado = null;
-            document.querySelectorAll('.nps-btn').forEach(b => b.classList.remove('selected'));
-        }
-
-        function cerrarEncuesta() {
-            document.getElementById('modalNPS').style.display = 'none';
-        }
-
-        function enviarEncuesta() {
-            if (!valorNpsSeleccionado) {
-                alert("Por favor, selecciona una puntuación del 1 al 10 antes de enviar.");
+            if (isNaN(puntaje) || puntaje < 1 || puntaje > 10) {
+                alert("Por favor ingresa un puntaje válido del 1 al 10.");
                 return;
             }
 
-            // Actualizar variables y calcular promedio
-            npsTotalSum += valorNpsSeleccionado;
+            // Actualizar variables matemáticas
+            npsTotalSum += puntaje;
             npsRespuestasTotales++;
             let promedioActual = (npsTotalSum / npsRespuestasTotales).toFixed(1);
 
             // Reflejar datos en el Dashboard en tiempo real
             document.getElementById('npsPromedioDisplay').innerText = promedioActual + " / 10";
             document.getElementById('npsCountDisplay').innerText = npsRespuestasTotales;
-
-            alert('¡Encuesta enviada! Los datos se han actualizado en el Dashboard de Taller.');
-            cerrarEncuesta();
+            
+            // Limpiar input
+            document.getElementById('inputWebhookNPS').value = "";
+            alert("✅ Recepción simulada con éxito. El Dashboard se ha actualizado.");
         }
     </script>
 </body>
