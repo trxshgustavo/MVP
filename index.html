@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TallerYa - MVP Valdivia</title>
+    <style>
+        /* Diseño Minimalista y Atmosférico */
+        :root {
+            --primary: #2C3E50;
+            --accent: #3498DB;
+            --bg: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text: #333333;
+            --success: #2ECC71;
+            --warning: #F1C40F;
+            --danger: #E74C3C;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
+        header p { margin: 5px 0 0 0; opacity: 0.8; font-size: 0.9rem; }
+
+        /* Navegación del Simulador */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            background: var(--card-bg);
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover { color: var(--accent); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        /* Contenedores de Vistas */
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .view { display: none; animation: fadeIn 0.4s ease; }
+        .view.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Tarjetas (Cards) */
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative; 
+        }
+
+        /* Formularios */
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem;}
+        select, input {
+            width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        select:focus, input:focus { border-color: var(--accent); outline: none; }
+        
+        button {
+            width: 100%; padding: 1rem; background-color: var(--accent); color: white; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s;
+        }
+        button:hover { background-color: #2980B9; }
+
+        /* Modal de Alertas */
+        .alert {
+            padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px; display: none; font-weight: 500; text-align: center;
+        }
+        .alert.error { background-color: #FDEDEC; border: 1px solid var(--danger); color: var(--danger); }
+        .alert.success { background-color: #EAFAF1; border: 1px solid var(--success); color: var(--success); }
+
+        /* Dashboard Semáforo y Estadísticas */
+        .stats-container {
+            display: flex; gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .stat-box {
+            background: var(--bg); padding: 1.5rem; border-radius: 8px; flex: 1; text-align: center; border: 1px solid #ddd;
+        }
+        .stat-box h3 { margin: 0; color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .stat-box p { margin: 10px 0 0 0; font-size: 2.2rem; font-weight: bold; color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f9f9f9; font-weight: 600; color: var(--primary); }
+        
+        .badge {
+            padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: white; display: inline-block;
+        }
+        .badge.verde { background-color: var(--success); }
+        .badge.amarillo { background-color: var(--warning); color: #333; }
+        .badge.rojo { background-color: var(--danger); }
+
+        /* Simulador Stock */
+        .stock-toggle {
+            display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 4px solid var(--accent);
+        }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--danger); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* MODAL ENCUESTA NPS */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; 
+            justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: white; padding: 2.5rem; border-radius: 12px; width: 90%; max-width: 500px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .nps-numbers {
+            display: flex; justify-content: space-between; gap: 5px; margin: 2rem 0; flex-wrap: wrap;
+        }
+        .nps-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: 1px solid #ddd;
+            background: #f9f9f9; cursor: pointer; font-weight: bold; color: #666;
+            transition: all 0.2s; font-size: 0.95rem; display: flex; align-items: center; justify-content: center;
+        }
+        .nps-btn:hover, .nps-btn.selected {
+            background: var(--success); color: white; border-color: var(--success); transform: scale(1.1);
+        }
+        .nps-labels {
+            display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: -10px; margin-bottom: 1.5rem;
+        }
+        .close-modal {
+            background: transparent; color: #999; padding: 0.5rem; font-weight: normal; margin-top: 1rem; width: auto;
+        }
+        .close-modal:hover { background: #f0f0f0; color: #333; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Trayén - TallerYa</h1>
+        <p>Prototipo MVP - Sucursal Valdivia</p>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('cliente')">1. Interfaz Cliente</div>
+        <div class="tab" onclick="switchTab('logistica')">2. Integración Repuestos</div>
+        <div class="tab" onclick="switchTab('dashboard')">3. Dashboard Taller</div>
+    </div>
+
+    <div class="container">
+        
+        <!-- VISTA 1: CLIENTE -->
+        <div id="cliente" class="view active">
+            <div class="card">
+                <h2 style="margin-top:0;">Agendar Mantención Preventiva</h2>
+                <p style="color:#666; margin-bottom:2rem;">Seleccione su vehículo y la fecha. El sistema verificará disponibilidad técnica al instante.</p>
+                
+                <div id="alertaCliente" class="alert"></div>
+
+                <form id="formAgendamiento">
+                    <div class="form-group">
+                        <label>Nombre del Cliente</label>
+                        <input type="text" id="nombreCliente" placeholder="Ej. Juan Pérez" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Servicio Requerido</label>
+                        <select id="tipoServicio" required>
+                            <option value="Mantención 10.000 KM">Mantención 10.000 KM (Aceite y Filtros)</option>
+                            <option value="Cambio de Pastillas de Freno">Cambio de Pastillas de Freno</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Solicitada</label>
+                        <input type="date" id="fechaCita" required>
+                    </div>
+                    <button type="submit" id="btnAgendar">Validar Disponibilidad y Agendar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- VISTA 2: LOGÍSTICA -->
+        <div id="logistica" class="view">
+            <div class="card">
+                <h2 style="margin-top:0;">Simulador de Inventario (Logística)</h2>
+                <p style="color:#666; margin-bottom:2rem;">Activa o desactiva el stock físico. Esto simulará la respuesta de la API al portal del cliente.</p>
+                
+                <div class="stock-toggle">
+                    <div>
+                        <strong>Kit Filtros y Aceite (Mantención 10k)</strong>
+                        <p style="margin:5px 0 0 0; font-size:0.85rem; color:#666;" id="stockStatusText">Estado: Sin Stock (Quiebre)</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggleStock">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 3: TALLER -->
+        <div id="dashboard" class="view">
+            <div class="card">
+                <h2 style="margin-top:0;">Panel Asesor de Servicio y Medición</h2>
+                <p style="color:#666; margin-bottom:1.5rem;">Visualización de carga diaria e indicadores de satisfacción en tiempo real.</p>
+                
+                <!-- Estadísticas NPS en Vivo -->
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <h3>NPS Promedio</h3>
+                        <p id="npsPromedioDisplay">N/A</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>Encuestas Recibidas</h3>
+                        <p id="npsCountDisplay">0</p>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaTaller">
+                        <tr>
+                            <td>María González</td>
+                            <td>Revisión General</td>
+                            <td>2026-07-08</td>
+                            <td><span class="badge amarillo">En Taller</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ENCUESTA NPS (Oculto por defecto) -->
+    <div id="modalNPS" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: var(--primary); margin-top: 0;">¡Hola <span id="npsNombreCliente"></span>! 👋</h2>
+            <p style="color: #666; font-size: 0.95rem;">Tu vehículo ya fue retirado de la sucursal Valdivia. Para la Gerencia de Postventa de Trayén, tu opinión es fundamental.</p>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">¿Qué tan probable es que recomiendes TallerYa a un amigo o colega?</h3>
+            
+            <div class="nps-numbers">
+                <!-- Escala 1 a 10 -->
+                <button type="button" class="nps-btn" data-val="1">1</button>
+                <button type="button" class="nps-btn" data-val="2">2</button>
+                <button type="button" class="nps-btn" data-val="3">3</button>
+                <button type="button" class="nps-btn" data-val="4">4</button>
+                <button type="button" class="nps-btn" data-val="5">5</button>
+                <button type="button" class="nps-btn" data-val="6">6</button>
+                <button type="button" class="nps-btn" data-val="7">7</button>
+                <button type="button" class="nps-btn" data-val="8">8</button>
+                <button type="button" class="nps-btn" data-val="9">9</button>
+                <button type="button" class="nps-btn" data-val="10">10</button>
+            </div>
+            <div class="nps-labels">
+                <span>Nada probable</span>
+                <span>Muy probable</span>
+            </div>
+
+            <button type="button" onclick="enviarEncuesta()" style="margin-bottom: 0.5rem;">Enviar Respuesta</button>
+            <button type="button" class="close-modal" onclick="cerrarEncuesta()">Cerrar x</button>
+        </div>
+    </div>
+
+    <script>
+        let stockDisponible = false; 
+        
+        // Variables para calcular el NPS
+        let npsTotalSum = 0;
+        let npsRespuestasTotales = 0;
+        let valorNpsSeleccionado = null;
+
+        // Lógica de pestañas
+        function switchTab(tabId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Lógica de simulador de logística
+        const toggleStock = document.getElementById('toggleStock');
+        const stockStatusText = document.getElementById('stockStatusText');
+
+        toggleStock.addEventListener('change', (e) => {
+            stockDisponible = e.target.checked;
+            if(stockDisponible) {
+                stockStatusText.innerText = "Estado: Stock Disponible en Valdivia";
+                stockStatusText.style.color = "var(--success)";
+            } else {
+                stockStatusText.innerText = "Estado: Sin Stock (Quiebre)";
+                stockStatusText.style.color = "var(--danger)";
+            }
+        });
+
+        // Lógica de Agendamiento
+        document.getElementById('formAgendamiento').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('nombreCliente').value;
+            const servicio = document.getElementById('tipoServicio').value;
+            const fecha = document.getElementById('fechaCita').value;
+            const alerta = document.getElementById('alertaCliente');
+            const btnAgendar = document.getElementById('btnAgendar');
+
+            if (!stockDisponible && servicio.includes("10.000 KM")) {
+                alerta.className = 'alert error';
+                alerta.innerHTML = `<strong>Agendamiento Bloqueado:</strong> Lo sentimos, actualmente hay un quiebre de stock logístico para los insumos de esta mantención. No podemos recibir su vehículo para evitar que quede detenido en taller.`;
+                alerta.style.display = 'block';
+                return;
+            }
+
+            // Éxito: Hay stock
+            alerta.className = 'alert success';
+            alerta.innerHTML = `<strong>Hora Confirmada:</strong> ¡Stock validado! Su hora está agendada.`;
+            alerta.style.display = 'block';
+
+            // Actualizar Dashboard
+            const tabla = document.getElementById('tablaTaller');
+            tabla.innerHTML += `
+                <tr>
+                    <td>${nombre}</td>
+                    <td>${servicio}</td>
+                    <td>${fecha}</td>
+                    <td><span class="badge verde">Agendado (Stock Ok)</span></td>
+                </tr>
+            `;
+            
+            // Inhabilitar botón para evitar múltiples clics mientras pasan los 10 segundos
+            btnAgendar.disabled = true;
+            btnAgendar.style.opacity = '0.5';
+
+            // Simular paso del tiempo y lanzar la encuesta NPS
+            setTimeout(() => {
+                abrirEncuesta(nombre);
+                alerta.style.display = 'none'; // Limpiamos la alerta al abrir el modal
+                btnAgendar.disabled = false;
+                btnAgendar.style.opacity = '1';
+                document.getElementById('formAgendamiento').reset();
+            }, 10000); 
+        });
+
+        // Lógica Modal NPS y Captura de Valor
+        document.querySelectorAll('.nps-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nps-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                valorNpsSeleccionado = parseInt(this.getAttribute('data-val'));
+            });
+        });
+
+        function abrirEncuesta(nombreCliente) {
+            document.getElementById('modalNPS').style.display = 'flex';
+            document.getElementById('npsNombreCliente').innerText = nombreCliente;
+            // Resetear selección previa
+            valorNpsSeleccionado = null;
+            document.querySelectorAll('.nps-btn').forEach(b => b.classList.remove('selected'));
+        }
+
+        function cerrarEncuesta() {
+            document.getElementById('modalNPS').style.display = 'none';
+        }
+
+        function enviarEncuesta() {
+            if (!valorNpsSeleccionado) {
+                alert("Por favor, selecciona una puntuación del 1 al 10 antes de enviar.");
+                return;
+            }
+
+            // Actualizar variables y calcular promedio
+            npsTotalSum += valorNpsSeleccionado;
+            npsRespuestasTotales++;
+            let promedioActual = (npsTotalSum / npsRespuestasTotales).toFixed(1);
+
+            // Reflejar datos en el Dashboard en tiempo real
+            document.getElementById('npsPromedioDisplay').innerText = promedioActual + " / 10";
+            document.getElementById('npsCountDisplay').innerText = npsRespuestasTotales;
+
+            alert('¡Encuesta enviada! Los datos se han actualizado en el Dashboard de Taller.');
+            cerrarEncuesta();
+        }
+    </script>
+</body>
+</html>
